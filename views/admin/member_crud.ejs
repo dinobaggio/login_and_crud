@@ -290,13 +290,13 @@
       */
       let data = new Promise(function (resolve, reject) {
         $.ajax({
-            url: '/admin/member_crud/member_detail/'+id,
+            url: '/admin/member_crud/detail_member/'+id,
             type: 'GET'
         }).done(function (res) {
             /*
             * loading animasinya disini dimatiinya
             * disini untuk proses sukses
-            */  
+            */
             $('#animasiloading').hide();
             resolve(res);
         }).fail(function (res) {

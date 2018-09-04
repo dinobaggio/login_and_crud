@@ -34,6 +34,9 @@ let saveMember = (req, res, next) => {
     return ifDataKosong(res);
   }
 
+  let bcrypt = require('bcrypt');
+  let salt = 10;
+  password = bcrypt.hashSync(password, salt);
   let member = new Member(id, username, password, fullname, status);
   let memberRepo = new MemberRepo(db);
   memberRepo.save(member, result => {
@@ -63,6 +66,10 @@ let updateMember = (req, res, next) => {
   if (!id || !username || !password || !fullname || !status) {
     return ifDataKosong(res);
   }
+
+  let bcrypt = require('bcrypt');
+  let salt = 10;
+  password = bcrypt.hashSync(password, salt);
   let member = {id, username, password, fullname, status, oldId};
   let memberRepo = new MemberRepo(db);
   memberRepo.update(member, result => {

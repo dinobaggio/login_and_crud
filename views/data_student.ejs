@@ -1,0 +1,599 @@
+<% include partials/_header %>
+
+<div class="container col-md-12">
+  <div class="row">
+
+    <div class="col-md-12">
+      <h3 class="display-5">Student</h3>
+      <form id="formCari" action="/get-all-student" class="form-inline my-2 my-lg-0">
+        <!--select id="combostudent" name="combostudent" class="form-control mr-sm-2">
+          <option>- - Berdasarkan - -</option>
+          <option value="code">Code</option>
+          <option value="name">Name</option>
+          <option value="department">Department</option>
+          <option value="age">Age</option>
+          <option value="birthday">Birthday</option>
+          <option value="salary">Salary</option>
+        </select>
+        <select id="combokondisi" name="combokondisi" class="form-control mr-sm-2">
+          <option>- - Kondisi - -</option>
+          <option value="samadengan">sama dengan</option> // OPERATORNYA =
+          <option value="seperti">seperti</option>        // OPERATORNNYA LIKE
+          <option value="kecuali">kecuali</option>        // OPERATORNYA < >
+        </select-->
+        <input class="form-control mr-sm-2" name="search" type="search" placeholder="Pencarian" aria-label="Search">
+        <button class="btn btn-outline-info" type="submit" style="border: 1px solid #dcdcdc">Cari</button>
+      </form><hr>
+    </div>
+
+    <!--Tabel-->
+    <div id="divTable" class="table-responsive-sm col-md-12">
+      <table id="tableStudent" class="table table-sm table-bordered table-hover">
+        <thead>
+          <tr class="table-info">
+            <th scope="col">CODE</th>
+            <th scope="col">NAME</th>
+            <th scope="col">DEPARTMENT</th>
+            <th scope="col">AGE</th>
+            <th scope="col">BIRTHDAY</th>
+            <th scope="col">SALARY</th>
+            <th scope="col" width="20%">ACTION</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table><hr>
+
+      <nav aria-label="Page navigation example">
+        <ul class="pagination">
+          <li class="page-item">
+            <a id="btnAdd" data-toggle="modal" data-target="#modalStudent" class="btn btn-outline-info">Tambah Data</a>
+          </li>
+          <li>&nbsp;&nbsp;</li>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+              <span class="sr-only">Previous</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+              <span class="sr-only">Next</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+    </div>
+
+  </div>
+</div>
+
+<% include partials/_footer %>
+
+
+
+<!-- Modal -->
+<div class="modal modal-info fade modal-fade-in-scale-up" id="modalStudent" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog">
+    <!-- konten modal-->
+    <div class="modal-content">
+      <!-- heading modal -->
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <!-- body modal -->
+
+      <div class="modal-body">
+          <form id="formStudent" method="POST">
+            <div class="form-group">
+              <input type="hidden" class="form-control" name="oldCode" >
+              <input type="text" name="code" placeholder="Code" class="form-control" autofocus>
+            </div>
+              <div class="form-group">
+                <input type="text" name="name" placeholder="Name" class="form-control">
+              </div>
+            <div class="form-group">
+              <input type="text" name="department" placeholder="Department" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="number" name="age" placeholder="Age" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <div class='input-group date' >
+                <input type="hidden" class="form-control" name="birthday" id="dateDatabase">
+                <input type='text' id='datepicker' placeholder="Birthday" class="form-control"/>
+                <span class="input-group-addon">
+                 <span class="glyphicon glyphicon-calendar"></span>
+                </span>
+              </div>
+
+              <!--div class="input-group">
+                <input type='text' name="birthday" id="datepicker" placeholder="Birthday" class="form-control"/>
+                <div class="input-group-append">
+                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                </div>
+              </div-->
+
+            </div>
+
+            <div class="form-group">
+              <input type="text" name="salary" placeholder="Salary" class="form-control">
+              <!--input type="text" name="salary" placeholder="Salary" class="form-control" onkeyup="this.nextSibling.innerHTML = formatCurrency(this.value);"-->
+            </div>
+
+            <button id="btnSaveStudent" class="btn btn-info">Simpan</button>
+            <button id="btnUpdateStudent" class="btn btn-warning">Ubah</button>
+          </form>
+      </div>
+
+      <!-- footer modal -->
+      <div class="modal-footer">
+        <!--Loading Proses-->
+        <div id="animasiloading">
+          Tunggu sebentar
+          <img src="/images/load.gif" width="35px" height="35px">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+    let formStudent = $('#formStudent');
+    let formCari = $('#formCari');
+    let modalStudent = $('#modalStudent');
+    let tableStudent = $('#tableStudent');
+    let btnAdd = $('#btnAdd');
+    let btnSaveStudent = $('#btnSaveStudent');
+    let btnUpdateStudent = $('#btnUpdateStudent');
+    let divTable = $('#divTable');
+
+    let datepick = $('#datepicker');
+    let dateDatabase = $('#dateDatabase'); // date for database
+
+    init(); // function initial awal page
+
+    //moment.locale('id');
+    $(function () {
+      datepick.datetimepicker({
+        format: 'YYYY-MM-DD', locale: 'id'//'DD MMMM YYYY'
+      });
+    });
+
+    /*
+    $('#combostudent').on('change', function(){
+      $('#combokondisi').val('-- Kondisi --');
+      $('input.form-control[name=search]').val('');
+    });
+
+
+    $('#combokondisi').on('change', function(){
+      $('input.form-control[name=search]').val('');
+    });
+    */
+
+    datepick.on('dp.change', function () {
+      let value = $(this).val();
+      if (value != '') {
+        dateDatabase.val(value);
+        let locale = convert_date_to_locale(value);
+        $(this).val(locale);
+      }
+      //console.log(locale);
+    });
+    datepick.on('click', function () {
+      let hiddenVal = dateDatabase.val();
+      if ($(this).val() !== '') {
+        let locale = convert_date_to_locale(hiddenVal);
+        $(this).val(locale);
+      }
+    });
+
+    btnAdd.click(function (event) {
+      // disini ketika modal tampil
+      // fungsi modal show sudah di atas memakai attribute data-toggle dan data-target
+      resetFormForAdd();
+    });
+    btnSaveStudent.click(function () {
+      add_student(formStudent);
+    });
+    formStudent.submit(function (event) {
+      event.preventDefault(); // mencegah submit form refresh halaman
+      // fungsi form tidak digunakan lagi, untuk add edit delete dilakukan dengan cara manipulasi menggunakan ajax
+      // disini hanya untuk mencega form ter-submit agar manipulasi bekerja
+    });
+    formCari.submit(function (event) {
+      event.preventDefault();
+      let search = $(this).serializeArray().reduce(function(obj, item) {
+          obj[item.name] = item.value;
+          return obj;
+      }, {});
+      get_search_student(search).then(function (res) {
+        //animasi loading di table
+        divTable.busyLoad("show", { spinner: "circle-line", background: "rgba(255, 255, 255, 0.7)", color: "#add8e6" });
+
+        if (res.message === undefined) {
+          let allStudent = res.result;
+          return draw_table_student(allStudent);
+        } else if (res.message === 'success') {
+          let allStudent = res.data;
+          return draw_table_student(allStudent);
+        }
+      }).catch(function (res) {
+        console.log(res);
+      });
+    });
+    function init () {
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "circle-line", background: "rgba(255, 255, 255, 0.7)", color: "#add8e6" });
+
+      get_all_student().then(function (res) {
+        let allStudent = res.data;
+        draw_table_student(allStudent);
+      }).catch(function (res) {
+        console.log(res);
+      });
+
+    }
+    function draw_table_student (allStudent) {
+      let tBody = $('tbody', tableStudent);
+      let table = '';
+      for (let student of allStudent) {
+        table += `<tr>
+            <td>${student.code}</td>
+            <td>${student.name}</td>
+            <td>${student.department}</td>
+            <td>${student.age}</td>
+            <td>${convert_date_to_locale(student.birthday)}</td>
+            <td>${rupiah(student.salary)}</td>
+            <td width="20%">
+              <a onclick="detail_student('${student.code}')" class="btn btn-outline-success btn-sm">Lihat</a>
+              <a onclick="edit_student('${student.code}')" class="btn btn-outline-warning btn-sm">Edit</a>
+              <a onclick="delete_student('${student.code}')" class="btn btn-outline-danger btn-sm">Hapus</a>
+            </td>
+          </tr>`;
+      }
+
+      divTable.busyLoad("hide");
+      tBody.html(table);
+    }
+  /*  $(function () {
+      $('#datepicker').datetimepicker({
+        format: 'DD MMMM YYYY',
+        locale: 'id',
+        icons: {
+          time: 'glyphicon glyphicon-time',
+          date: 'glyphicon glyphicon-calendar',
+          up: 'glyphicon glyphicon-chevron-up',
+          down: 'glyphicon glyphicon-chevron-down',
+          previous: 'glyphicon glyphicon-chevron-left',
+          previous: 'glyphicon glyphicon-backward',
+          next: 'glyphicon glyphicon-chevron-right',
+          today: 'glyphicon glyphicon-screenshot',
+          clear: 'glyphicon glyphicon-trash',
+          close: 'glyphicon glyphicon-remove'
+        },
+      });
+    });*/
+/*
+    function formatCurrency(num) {
+    var
+      num = num.toString().replace(/$|,/g,'');
+      if(isNaN(num)){
+        num = "0";
+        sign = (num == (num = Math.abs(num)));
+        num = Math.floor(num*100+0.50000000001);
+        cents = num%100;
+        num = Math.floor(num/100).toString();
+      }
+      if(cents<10){
+        cents = "0" + cents;
+        for (var i = 0; i < Math.floor((num.length–(1+i))/3); i++)
+        num = num.substring(0,num.length-(4*i+3))+'.'+
+        num.substring(num.length-(4*i+3));
+      }
+      return (((sign)?'':'-') + 'Rp' + num + ',' + cents);
+    }
+*/
+    function rupiah(bilangan) {
+      let number_string = bilangan.toString(),
+          sisa    = number_string.length % 3,
+          uang    = number_string.substr(0, sisa),
+          ribuan  = number_string.substr(sisa).match(/\d{3}/g)
+          rp      = toString()
+
+      if (ribuan) {
+          var separator = sisa ? '.' : ''
+          uang += separator + ribuan.join('.')
+          rp = 'Rp. '+uang+',-'
+      }
+      return rp
+    }
+
+    function add_student(element) {
+      // parameter element = element form
+      let data = $(element).serializeArray().reduce(function(obj, item) {
+            obj[item.name] = item.value;
+            return obj;
+        }, {}); // mengambil data-data pada form dan merubah menjadi bentuk objek src:stackoverflow
+        /*
+        * bisa ditaro sini kalo perlu ada loading animasinya
+        * disini dinyalainnya
+        */
+        $('#animasiloading').show();
+        add_data(data).then(function (res) {
+          $('#animasiloading').hide();
+          if (res.message == 'success') {
+            alert('data sukses dimasukan');
+            modalStudent.modal('hide');
+            //window.location = '/data_student';
+            init();
+          } else if (res.message == 'failed') {
+            alert(res.error);
+            modalStudent.modal('hide');
+          }
+        }).catch(function (res) {
+          let response = res.responseJSON;
+          if (response.message == 'failed') {
+            alert(response.error);
+          }
+        });
+    }
+    function detail_student(code) {
+      //href="/student_detail/"
+      /*
+      * bisa ditaro sini kalo perlu ada loading animasinya
+      * disini dinyalainnya
+      */
+      $('#animasiloading').show();
+      get_student_detail(code).then(function (res) {
+        //console.log(res);
+        // jika sukses
+        let student = res.data;
+        setFormForDetail(student);
+      }).catch(function (res) {
+        // jika gagal
+        console.log(res);
+      });
+    }
+    function edit_student(code) {
+      get_student_detail(code).then(function (res) {
+        //console.log(res);
+        // jika sukses
+        let student = res.data;
+        setFormForEdit(student);
+      }).catch(function (res) {
+        // jika gagal
+        console.log(res);
+      });
+    }
+    function update_student() {
+      let data = $(formStudent).serializeArray().reduce(function(obj, item) {
+          obj[item.name] = item.value;
+          return obj;
+      }, {});
+      /*
+      * bisa ditaro sini kalo perlu ada loading animasinya
+      * disini dinyalainnya
+      */
+      //console.log(data.birthday)
+      //data.birthday = new Date(data.birthday);
+      $('#animasiloading').show();
+      update_data(data).then(function (res) {
+        $('#animasiloading').hide();
+        if (res.message == 'success') {
+          alert('data sukses diupdate');
+          modalStudent.modal('hide');
+          init();
+        } else if (res.message == 'failed') {
+          alert(res.error);
+          modalStudent.modal('hide');
+        }
+        console.log(res);
+      }).catch(function (res) {
+        let response = res.responseJSON;
+        if (response.message == 'failed') {
+          alert(response.error);
+        }
+      });
+    }
+    function delete_student(code) {
+      //href="/delete_student/"
+      let yakin = confirm('Yakin ingin menghapus data ?');
+      if (yakin == true) {
+        delete_data(code).then(function (res) {
+          //window.location = '/data_student';
+          init();
+        }).catch(function (res) {
+          console.log(res);
+        });
+      }
+    }
+    function get_student_detail (code) {
+      /*
+      * promise bawaan javascript
+      */
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+            url: '/student_detail/'+code,
+            type: 'GET'
+        }).done(function (res) {
+            /*
+            * loading animasinya disini dimatiinya
+            * disini untuk proses sukses
+            */
+            $('#animasiloading').hide();
+            resolve(res);
+          //console.log(res);
+        }).fail(function (res) {
+            /*
+            * loading animasinya disini dimatiinya
+            * disini jika proses gagal
+            */
+            $('#animasiloading').hide();
+            reject(res);
+        });
+      });
+      return data;
+    }
+    function add_data (student) {
+      /*
+      * promise bawaan javascript
+      */
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+            url: '/save_student',
+            type: 'POST',
+            data: student
+        }).done(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini untuk proses sukses
+          */
+          $('#animasiloading').hide();
+          resolve(res);
+        }).fail(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini jika proses gagal
+          */
+          $('#animasiloading').hide();
+          reject(res);
+        });
+      });
+      return data;
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "accordion", background: "rgba(174, 189, 214, 0.73)" });
+    }
+    function update_data (student) {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url: '/update_student',
+          type: 'POST',
+          data: student
+        }).done(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini untuk proses sukses
+          */
+          $('#animasiloading').hide();
+          resolve(res);
+        }).fail(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini untuk proses sukses
+          */
+          $('#animasiloading').hide();
+          reject(res);
+        });
+      });
+      return data;
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "accordion", background: "rgba(174, 189, 214, 0.73)" });
+    }
+    function delete_data(code) {
+
+      let data = new Promise(function (resolve, reject){
+        $.ajax({
+          url: '/delete_student/'+code,
+          type: 'GET'
+        }).done(function (res) {
+          // disini matikan animasi
+          resolve(res);
+        }).fail(function (res) {
+          // disni matikan animasi
+          reject(res);
+        });
+      });
+      return data;
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "accordion", background: "rgba(174, 189, 214, 0.73)" });
+    }
+    function get_all_student () {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url:'/get-all-student',
+          type: 'GET'
+        }).done(function (res) {
+          resolve(res);
+        }).fail(function (res) {
+          reject(res);
+        });
+      });
+      return data;
+    }
+    function get_search_student (search) {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url: '/get-all-student',
+          type: 'GET',
+          data: search
+        }).done(function (res) {
+          resolve(res);
+        }).fail(function (res) {
+          reject(res);
+        });
+      });
+      return data;
+    }
+    function convert_date_to_locale(date) {
+      let tanggal = moment(date).locale('id').format('DD MMMM YYYY');
+      return tanggal;
+    }
+    function convert_database_date (date) {
+      let tanggal = new Date(date);
+      return tanggal;
+    }
+    function resetFormForAdd() {
+      $('#animasiloading').hide();
+      $.busyLoadFull("show", { spinner: "cube-grid" });
+      $('.modal-title').text('Tambah Data');
+      $('input.form-control', modalStudent).val('').prop('disabled', false);
+      btnSaveStudent.show();
+      btnUpdateStudent.hide();
+      $.busyLoadFull("hide");
+    }
+    function setFormForDetail(data) {
+      $('#animasiloading').hide();
+      $.busyLoadFull("show", { spinner: "cube-grid" });
+      $('.modal-title').text('Lihat data');
+      $('input.form-control', modalStudent).val('').prop('disabled', true);
+      $('input.form-control[name=code]').val(data.code);
+      $('input.form-control[name=name]').val(data.name);
+      $('input.form-control[name=department]').val(data.department);
+      $('input.form-control[name=age]').val(data.age);
+      datepick.val(convert_date_to_locale(data.birthday));
+      $('input.form-control[name=salary]').val(data.salary);
+      modalStudent.modal('show');
+      btnSaveStudent.hide();
+      btnUpdateStudent.hide();
+      $.busyLoadFull("hide");
+    }
+    function setFormForEdit(data) {
+      $('#animasiloading').hide();
+      $.busyLoadFull("show", { spinner: "cube-grid" });
+      $('.modal-title').text('Sunting Data');
+      $('input.form-control', modalStudent).val('').prop('disabled', false);
+      //$('input.form-control[name=code]').val(data.code).prop('disabled', true);
+      $('input.form-control[name=oldCode]').val(data.code);
+      $('input.form-control[name=code]').val(data.code);
+      $('input.form-control[name=name]').val(data.name);
+      $('input.form-control[name=department]').val(data.department);
+      $('input.form-control[name=age]').val(data.age);
+      $('input.form-control[name=birthday]').val(data.birthday);
+      datepick.data("DateTimePicker").date(new Date(data.birthday)); // update datetimepicker src: stackoverflow
+      datepick.val(convert_date_to_locale(data.birthday));
+      $('input.form-control[name=salary]').val(data.salary);
+      modalStudent.modal('show');
+      btnSaveStudent.hide();
+      btnUpdateStudent.show();
+      btnUpdateStudent.attr('onclick', 'update_student()');
+      $.busyLoadFull("hide");
+    }
+</script>

@@ -1,0 +1,113 @@
+<% include partials/_header %>
+
+<div class="container col-md-12">
+  <div class="row">
+
+    <div class="col-md-12">
+      <h3 class="display-5">HALAMAN 1</h3>
+      <form id="formCari" action="/get-all-hal1" class="form-inline my-2 my-lg-0">
+        <input class="form-control mr-sm-2" name="search" type="search" placeholder="Pencarian" aria-label="Search">
+        <button class="btn btn-outline-info" type="submit" style="border: 1px solid #dcdcdc">Cari</button>
+      </form><hr>
+    </div>
+
+    <!--Tabel-->
+    <div id="divTable" class="table-responsive-sm col-md-12">
+      <table id="tableHal1" class="table table-sm table-bordered table-hover">
+        <thead>
+          <tr class="table-info">
+            <th scope="col">ID</th>
+            <th scope="col">ISI</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table><hr>
+
+    </div>
+
+  </div>
+</div>
+
+<% include partials/_footer %>
+
+<script>
+    let formCari = $('#formCari');
+    let tableHal1 = $('#tableHal1');
+    let divTable = $('#divTable');
+
+    init(); // function initial awal page
+
+    formCari.submit(function (event) {
+      event.preventDefault();
+      let search = $(this).serializeArray().reduce(function(obj, item) {
+          obj[item.name] = item.value;
+          return obj;
+      }, {});
+      get_search_hal1(search).then(function (res) {
+        //animasi loading di table
+        divTable.busyLoad("show", { spinner: "circle-line", background: "rgba(255, 255, 255, 0.7)", color: "#add8e6" });
+
+        if (res.message === undefined) {
+          let allHal1 = res.result;
+          return draw_table_hal1(allHal1);
+        } else if (res.message === 'success') {
+          let allHal1 = res.data;
+          return draw_table_hal1(allHal1);
+        }
+      }).catch(function (res) {
+        console.log(res);
+      });
+    });
+    function init () {
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "circle-line", background: "rgba(255, 255, 255, 0.7)", color: "#add8e6" });
+
+      get_all_hal1().then(function (res) {
+        let allHal1 = res.data;
+        draw_table_hal1(allHal1);
+      }).catch(function (res) {
+        console.log(res);
+      });
+
+    }
+    function draw_table_hal1 (allHal1) {
+      let tBody = $('tbody', tableHal1);
+      let table = '';
+      for (let hal1 of allHal1) {
+        table += `<tr>
+            <td>${hal1.id}</td>
+            <td>${hal1.isi}</td>
+          </tr>`;
+      }
+
+      divTable.busyLoad("hide");
+      tBody.html(table);
+    }
+    function get_all_hal1 () {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url:'/get-all-hal1',
+          type: 'GET'
+        }).done(function (res) {
+          resolve(res);
+        }).fail(function (res) {
+          reject(res);
+        });
+      });
+      return data;
+    }
+    function get_search_hal1 (search) {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url: '/get-all-hal1',
+          type: 'GET',
+          data: search
+        }).done(function (res) {
+          resolve(res);
+        }).fail(function (res) {
+          reject(res);
+        });
+      });
+      return data;
+    }
+</script>

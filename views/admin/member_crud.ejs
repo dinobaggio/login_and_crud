@@ -1,0 +1,453 @@
+<% include ../partials/_header %>
+
+<div class="container col-md-12">
+  <div class="row">
+
+    <div class="col-md-12">
+      <h3 class="display-5">Member</h3>
+      <form id="formCari" action="/get-all-member" class="form-inline my-2 my-lg-0">
+        <input class="form-control mr-sm-2" name="search" type="search" placeholder="Pencarian" aria-label="Search">
+        <button class="btn btn-outline-info" type="submit" style="border: 1px solid #dcdcdc">Cari</button>
+      </form><hr>
+    </div>
+
+    <!--Tabel-->
+    <div id="divTable" class="table-responsive-sm col-md-12">
+      <table id="tableMember" class="table table-sm table-bordered table-hover">
+        <thead>
+          <tr class="table-info">
+            <th scope="col">ID</th>
+            <th scope="col">USERNAME</th>
+            <th scope="col">PASSWORD</th>
+            <th scope="col">NAMA</th>
+            <th scope="col">STATUS</th>
+            <th scope="col" width="20%">AKSI</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table><hr>
+
+      <nav aria-label="Page navigation example">
+        <ul class="pagination">
+          <li class="page-item">
+            <a id="btnAdd" data-toggle="modal" data-target="#modalMember" class="btn btn-outline-info">Tambah Data</a>
+          </li>
+          <li>&nbsp;&nbsp;</li>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+              <span class="sr-only">Previous</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+              <span class="sr-only">Next</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+    </div>
+
+  </div>
+</div>
+
+<% include ../partials/_footer %>
+
+
+
+<!-- Modal -->
+<div class="modal modal-info fade modal-fade-in-scale-up" id="modalMember" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" data-backdrop="static">
+  <div class="modal-dialog">
+    <!-- konten modal-->
+    <div class="modal-content">
+      <!-- heading modal -->
+      <div class="modal-header">
+        <h5 class="modal-title"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <!-- body modal -->
+
+      <div class="modal-body">
+          <form id="formMember" method="POST">
+            <div class="form-group">
+              <input type="hidden" class="form-control" name="oldId" >
+              <input type="text" name="id" placeholder="Id" class="form-control" autofocus>
+            </div>
+              <div class="form-group">
+                <input type="text" name="username" placeholder="Username" class="form-control">
+              </div>
+            <div class="form-group">
+              <input type="text" name="password" placeholder="Password" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="text" name="fullname" placeholder="Fullname" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="text" name="status" placeholder="Status" class="form-control">
+            </div>
+
+            <button id="btnSaveMember" class="btn btn-info">Simpan</button>
+            <button id="btnUpdateMember" class="btn btn-warning">Ubah</button>
+          </form>
+      </div>
+
+      <!-- footer modal -->
+      <div class="modal-footer">
+        <!--Loading Proses-->
+        <div id="animasiloading">
+          Tunggu sebentar
+          <img src="/images/load.gif" width="35px" height="35px">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+    let formMember = $('#formMember');
+    let formCari = $('#formCari');
+    let modalMember = $('#modalMember');
+    let tableMember = $('#tableMember');
+    let btnAdd = $('#btnAdd');
+    let btnSaveMember = $('#btnSaveMember');
+    let btnUpdateMember = $('#btnUpdateMember');
+    let divTable = $('#divTable');
+/*
+    let datepick = $('#datepicker');
+    let dateDatabase = $('#dateDatabase'); // date for database
+*/
+    init(); // function initial awal page
+
+    btnAdd.click(function (event) {
+      // disini ketika modal tampil
+      // fungsi modal show sudah di atas memakai attribute data-toggle dan data-target
+      resetFormForAdd();
+    });
+    btnSaveMember.click(function () {
+      add_member(formMember);
+    });
+    formMember.submit(function (event) {
+      event.preventDefault(); // mencegah submit form refresh halaman
+      // fungsi form tidak digunakan lagi, untuk add edit delete dilakukan dengan cara manipulasi menggunakan ajax
+      // disini hanya untuk mencega form ter-submit agar manipulasi bekerja
+    });
+    formCari.submit(function (event) {
+      event.preventDefault();
+      let search = $(this).serializeArray().reduce(function(obj, item) {
+          obj[item.name] = item.value;
+          return obj;
+      }, {});
+      get_search_member(search).then(function (res) {
+        //animasi loading di table
+        divTable.busyLoad("show", { spinner: "circle-line", background: "rgba(255, 255, 255, 0.7)", color: "#add8e6" });
+
+        if (res.message === undefined) {
+          let allMember = res.result;
+          return draw_table_member(allMember);
+        } else if (res.message === 'success') {
+          let allMember = res.data;
+          return draw_table_member(allMember);
+        }
+      }).catch(function (res) {
+        console.log(res);
+      });
+    });
+    function init () {
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "circle-line", background: "rgba(255, 255, 255, 0.7)", color: "#add8e6" });
+
+      get_all_member().then(function (res) {
+        let allMember = res.data;
+        draw_table_member(allMember);
+      }).catch(function (res) {
+        console.log(res);
+      });
+
+    }
+    function draw_table_member (allMember) {
+      let tBody = $('tbody', tableMember);
+      let table = '';
+      for (let member of allMember) {
+        table += `<tr>
+            <td>${member.id}</td>
+            <td>${member.username}</td>
+            <td>${member.password}</td>
+            <td>${member.fullname}</td>
+            <td>${member.status}</td>
+            <td width="20%">
+              <a onclick="detail_member('${member.id}')" class="btn btn-outline-success btn-sm">Lihat</a>
+              <a onclick="edit_member('${member.id}')" class="btn btn-outline-warning btn-sm">Edit</a>
+              <a onclick="delete_member('${member.id}')" class="btn btn-outline-danger btn-sm">Hapus</a>
+            </td>
+          </tr>`;
+      }
+
+      divTable.busyLoad("hide");
+      tBody.html(table);
+    }
+    function add_member(element) {
+      // parameter element = element form
+      let data = $(element).serializeArray().reduce(function(obj, item) {
+            obj[item.name] = item.value;
+            return obj;
+        }, {}); // mengambil data-data pada form dan merubah menjadi bentuk objek src:stackoverflow
+        /*
+        * bisa ditaro sini kalo perlu ada loading animasinya
+        * disini dinyalainnya
+        */
+        $('#animasiloading').show();
+        add_data(data).then(function (res) {
+          $('#animasiloading').hide();
+          if (res.message == 'success') {
+            alert('data sukses dimasukan');
+            modalMember.modal('hide');
+            init();
+          } else if (res.message == 'failed') {
+            alert(res.error);
+            modalMember.modal('hide');
+          }
+        }).catch(function (res) {
+          let response = res.responseJSON;
+          if (response.message == 'failed') {
+            alert(response.error);
+          }
+        });
+    }
+    function detail_member(id) {
+      /*
+      * bisa ditaro sini kalo perlu ada loading animasinya
+      * disini dinyalainnya
+      */
+      $('#animasiloading').show();
+      get_member_detail(id).then(function (res) {
+        //console.log(res);
+        // jika sukses
+        let member = res.data;
+        setFormForDetail(member);
+      }).catch(function (res) {
+        // jika gagal
+        console.log(res);
+      });
+    }
+    function edit_member(id) {
+      get_member_detail(id).then(function (res) {
+        //console.log(res);
+        // jika sukses
+        let member = res.data;
+        setFormForEdit(member);
+      }).catch(function (res) {
+        // jika gagal
+        console.log(res);
+      });
+    }
+    function update_member() {
+      let data = $(formMember).serializeArray().reduce(function(obj, item) {
+          obj[item.name] = item.value;
+          return obj;
+      }, {});
+      /*
+      * bisa ditaro sini kalo perlu ada loading animasinya
+      * disini dinyalainnya
+      */
+      $('#animasiloading').show();
+      update_data(data).then(function (res) {
+        $('#animasiloading').hide();
+        if (res.message == 'success') {
+          alert('data sukses diupdate');
+          modalMember.modal('hide');
+          init();
+        } else if (res.message == 'failed') {
+          alert(res.error);
+          modalMember.modal('hide');
+        }
+        console.log(res);
+      }).catch(function (res) {
+        let response = res.responseJSON;
+        if (response.message == 'failed') {
+          alert(response.error);
+        }
+      });
+    }
+    function delete_member(id) {
+      //href="/delete_member/"
+      let yakin = confirm('Yakin ingin menghapus data ?');
+      if (yakin == true) {
+        delete_data(id).then(function (res) {
+          init();
+        }).catch(function (res) {
+          console.log(res);
+        });
+      }
+    }
+    function get_member_detail (id) {
+      /*
+      * promise bawaan javascript
+      */
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+            url: '/admin/member_crud/member_detail/'+id,
+            type: 'GET'
+        }).done(function (res) {
+            /*
+            * loading animasinya disini dimatiinya
+            * disini untuk proses sukses
+            */  
+            $('#animasiloading').hide();
+            resolve(res);
+        }).fail(function (res) {
+            /*
+            * loading animasinya disini dimatiinya
+            * disini jika proses gagal
+            */
+            $('#animasiloading').hide();
+            reject(res);
+        });
+      });
+      return data;
+    }
+    function add_data (member) {
+      /*
+      * promise bawaan javascript
+      */
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+            url: '/admin/member_crud/save_member',
+            type: 'POST',
+            data: member
+        }).done(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini untuk proses sukses
+          */
+          $('#animasiloading').hide();
+          resolve(res);
+        }).fail(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini jika proses gagal
+          */
+          $('#animasiloading').hide();
+          reject(res);
+        });
+      });
+      return data;
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "accordion", background: "rgba(174, 189, 214, 0.73)" });
+    }
+    function update_data (member) {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url: '/admin/member_crud/update_member',
+          type: 'POST',
+          data: member
+        }).done(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini untuk proses sukses
+          */
+          $('#animasiloading').hide();
+          resolve(res);
+        }).fail(function (res) {
+          /*
+          * loading animasinya disini dimatiinya
+          * disini untuk proses sukses
+          */
+          $('#animasiloading').hide();
+          reject(res);
+        });
+      });
+      return data;
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "accordion", background: "rgba(174, 189, 214, 0.73)" });
+    }
+    function delete_data(id) {
+      let data = new Promise(function (resolve, reject){
+        $.ajax({
+          url: '/admin/member_crud/delete_member/'+id,
+          type: 'GET'
+        }).done(function (res) {
+          // disini matikan animasi
+          resolve(res);
+        }).fail(function (res) {
+          // disni matikan animasi
+          reject(res);
+        });
+      });
+      return data;
+      //animasi loading di table
+      divTable.busyLoad("show", { spinner: "accordion", background: "rgba(174, 189, 214, 0.73)" });
+    }
+    function get_all_member () {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url:'/admin/member_crud/get-all-member',
+          type: 'GET'
+        }).done(function (res) {
+          resolve(res);
+        }).fail(function (res) {
+          reject(res);
+        });
+      });
+      return data;
+    }
+    function get_search_member (search) {
+      let data = new Promise(function (resolve, reject) {
+        $.ajax({
+          url: '/admin/member_crud/get-all-member',
+          type: 'GET',
+          data: search
+        }).done(function (res) {
+          resolve(res);
+        }).fail(function (res) {
+          reject(res);
+        });
+      });
+      return data;
+    }
+    function resetFormForAdd() {
+      $('#animasiloading').hide();
+      $.busyLoadFull("show", { spinner: "cube-grid" });
+      $('.modal-title').text('Tambah Data');
+      $('input.form-control', modalMember).val('').prop('disabled', false);
+      btnSaveMember.show();
+      btnUpdateMember.hide();
+      $.busyLoadFull("hide");
+    }
+    function setFormForDetail(data) {
+      $('#animasiloading').hide();
+      $.busyLoadFull("show", { spinner: "cube-grid" });
+      $('.modal-title').text('Lihat data');
+      $('input.form-control', modalMember).val('').prop('disabled', true);
+      $('input.form-control[name=id]').val(data.id);
+      $('input.form-control[name=username]').val(data.username);
+      $('input.form-control[name=password]').val(data.password);
+      $('input.form-control[name=fullname]').val(data.fullname);
+      $('input.form-control[name=status]').val(data.status);
+      modalMember.modal('show');
+      btnSaveMember.hide();
+      btnUpdateMember.hide();
+      $.busyLoadFull("hide");
+    }
+    function setFormForEdit(data) {
+      $('#animasiloading').hide();
+      $.busyLoadFull("show", { spinner: "cube-grid" });
+      $('.modal-title').text('Sunting Data');
+      $('input.form-control', modalMember).val('').prop('disabled', false);
+      $('input.form-control[name=oldId]').val(data.id);
+      $('input.form-control[name=id]').val(data.id);
+      $('input.form-control[name=username]').val(data.username);
+      $('input.form-control[name=password]').val(data.password);
+      $('input.form-control[name=fullname]').val(data.fullname);
+      $('input.form-control[name=status]').val(data.status);
+      modalMember.modal('show');
+      btnSaveMember.hide();
+      btnUpdateMember.show();
+      btnUpdateMember.attr('onclick', 'update_member()');
+      $.busyLoadFull("hide");
+    }
+</script>

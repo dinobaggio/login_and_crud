@@ -64,6 +64,8 @@
         </ul>
       </nav>
 
+      <% include datatables %>
+
     </div>
 
   </div>
@@ -238,6 +240,7 @@
         draw_table_student(allStudent);
       }).catch(function (res) {
         console.log(res);
+        divTable.busyLoad("hide");
       });
 
     }
@@ -518,7 +521,7 @@
     function get_all_student () {
       let data = new Promise(function (resolve, reject) {
         $.ajax({
-          url:'/get-all-student',
+          url:'/sget-all-student',
           type: 'GET'
         }).done(function (res) {
           resolve(res);

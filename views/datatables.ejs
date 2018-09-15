@@ -1,0 +1,29 @@
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+            <th>code</th>
+            <th>name</th>
+            <th>department</th>
+            <th>age</th>
+            <th>birthday</th>
+            <th>salary</th>
+
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+let table_id = $('#table_id');
+// /get-all-student
+
+ table_id.DataTable({
+        processing: true,
+        serverSide:true,
+        ajax: '/get-all-student'
+    });
+
+
+
+</script>

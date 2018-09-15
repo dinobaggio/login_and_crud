@@ -152,31 +152,50 @@ let getStudent = (req, res, next) => {
 
 let getAllStudent = (req, res, next) => {
   let roleUser = RoleUser(req.user);
+  let { draw, columns, order, start, length, search} = req.query
+  let setting = {
+    draw,
+    columns,
+    order,
+    start,
+    length,
+    search
+  };
+  console.log("ini req setting", setting)
+  
   if (roleUser === true) {
     return ifUser(res);
   }
 
   let studentRepo = new StudentRepo(db);
-  let { search } = req.query;
-  if (search) {
+  
+  if (false) {
     // search
     let params = [req, res, next];
     getSearchStudent(...params); // getSearch di initial di bawah
   } else {
-    studentRepo.findAll(results => {
-      let json = {
-        message: 'success',
-        data: results
-      }
-      res.setHeader('Content-Type', 'application/json');
-      res.status(200);
-      res.send(JSON.stringify(json));
-      return res.end();
-      //res.render('data_student', {'students': results, 'title': 'Student List'});
-    }, err => {
-      if(err){
-        return ifError(res, err);
-      }
+    studentRepo.totalRecord((total) => {
+      let recordsTotal = total
+      studentRepo.findAll(setting, results => {
+        let json = {
+          message: 'success',
+          draw: setting.draw,
+          recordsTotal,
+          recordsFiltered: recordsTotal,
+          data: results
+        }
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200);
+        res.send(JSON.stringify(json));
+        return res.end();
+        //res.render('data_student', {'students': results, 'title': 'Student List'});
+      }, err => {
+        if(err){
+          return ifError(res, err);
+        }
+      });
+    }, (err) => {
+      console.log(err)
     });
   }
 };

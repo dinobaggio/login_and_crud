@@ -98,9 +98,9 @@ StudentRepository.prototype = {
     });
   },
 
-  findAll: function(cb, errCb){
+  findAll: function(setting, cb, errCb){
     let db = this.db;
-    let query = 'SELECT * FROM student';
+    let query = `SELECT * FROM student LIMIT ${setting.start}, ${setting.length}`;
     db.query(query, (err, results, fields) => {
       if(err){
         return errCb(err);
@@ -111,7 +111,7 @@ StudentRepository.prototype = {
         let studentArray = [];
         for(let i=0;i<results.length;i++){
           let s = results[i];
-          let student = new Student(s.code, s.name, s.department, s.age, s.birthday, s.salary);
+          let student = [s.code, s.name, s.department, s.age, s.birthday, s.salary] //new Student(s.code, s.name, s.department, s.age, s.birthday, s.salary);
           studentArray.push(student);
         }
         return cb(studentArray);
@@ -119,6 +119,19 @@ StudentRepository.prototype = {
     });
   },
 
+  totalRecord : function (cb, errCb) {
+    let db = this.db;
+    let query = 'SELECT * FROM student';
+    db.query(query, (err, results, fields) => {
+      if (err) {
+        return errCb(err);
+      } if (!results) {
+        return cb('table kosong');
+      } else {
+        cb(results.length);
+      }
+    })
+  },
   findSearch: function (search, cb, errCb) {
     let db = this.db;
     let query = `SELECT * FROM student WHERE (code LIKE '%${search}%') OR
